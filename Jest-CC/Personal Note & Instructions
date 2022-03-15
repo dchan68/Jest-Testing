@@ -1,0 +1,103 @@
+Enter in terminal: npm init -y
+Enter in terminal: npm install --save-dev jest
+
+To test for a function, create a test file using naming structure: nameOfFileToTest.test.jest
+Ex: sum.test.ts
+
+Tests have to exists inside a test block and can specify as it() or test(). They accept 2 params, 1st is
+name of the test and then callback function
+ex:
+     FileName: sum.js
+
+            function sum(num1, num2){
+                return num1 + num2
+            }
+
+            module.exports = sum
+---------------------------------------------
+      Filename: sum.test.js
+
+            const sum = require("./sum")
+
+            it("should add 1 + 2 to equal 3", () =>{
+                const result = sum(1,2)
+                expect(result).toBe(3)
+            })
+
+To run the test, go to package.json and change whatever is in "test": "..." to "jest"
+Then in terminal, enter npm run test and test should be ran and passed
+
+NOTE: for test above, could also use toEqual() instead of toBe()
+NOTE: diff between toEqual() and toBe() is that if using objects, objects have to be the same in order to pass. 
+NOTE: can group common tests (multiple it()) with describe()
+
+Ex: 
+
+            describe("example tests", () => {
+                it("should add 1 + 2 to equal 3", () =>{
+                    const result = sum(1,2)
+                    expect(result).toBe(3)
+                })
+
+                it("object assignment", () => {
+                    const obj = {}
+                    expect(obj).toBe({})
+                })
+            })
+
+The second it() will fail bc obj object is different from the empty object {}
+Just like how console.log({} === {}) will result in false
+But to check if object content is similar to another object, then can use toEqual(), which will be a pass
+
+Review the tests under 01-matchers directory
+
+-----------------------------------------------------------------
+02-async
+Enter in terminal: npm install axios
+
+Create async.js and enter following code:
+
+            const axios = require("axios")
+
+            const fetchData = async (id) => {
+                const results = await axios.get(`https://jsonplaceholder.typicode.com/todos/${id}`)
+                console.log(results)
+                return results
+            }
+
+            fetchData(1)
+
+            module.exports = fetchData
+
+cd into 02-async and enter in terminal: node async
+will return data but interested in this returned data, data: { userId: 1, id: 1, title: 'delectus aut autem', completed: false }
+
+change code to return results.data and remove the console.log
+
+Create async.test.js and enter following code
+
+            const axios = require("axios")
+
+            it("should return correct todo", () => {
+                const todo = fetchData(1)
+                expect(todo.id).toBe(1)
+            })
+
+Will fail bc the function is async. To make test run successfuly, enter:
+
+            it("should return correct todo", () => {
+                const todo = fetchData(1).then(todo => {
+                    expect(todo.id).toBe(1)
+                })  
+            })
+
+OR CAN DO THIS AS WELL
+
+            it("should return correct todo", async () => {
+                const todo = await fetchData(1)
+                expect(todo.id).toBe(1)
+            })
+
+NOTE: npm run test will run ALL the test files. To specify which test to run, enter npm run test <name of test>
+Ex: npm run test async
+
