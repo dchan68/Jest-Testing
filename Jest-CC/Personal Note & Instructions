@@ -1,3 +1,5 @@
+Learning resource: https://www.youtube.com/watch?v=ajiAl5UNzBU
+
 Enter in terminal: npm init -y
 Enter in terminal: npm install --save-dev jest
 
@@ -100,4 +102,225 @@ OR CAN DO THIS AS WELL
 
 NOTE: npm run test will run ALL the test files. To specify which test to run, enter npm run test <name of test>
 Ex: npm run test async
+------------------------------------------------------
+SETTING UP AND TEARING DOWN TESTS   
+03-setup
+In setup.test.js add following code:
 
+let animals = ['elephant', 'zebra', 'bear', 'tiger']
+
+    describe("animals array", () => {
+        it("should add animal to end of array", () => {
+            animals.push("aligator")
+            expect(animals[animals.length - 1]).toBe("aligator")
+        })
+
+        it("should add animal to beginning of array", () => {
+            animals.unshift("monkey")
+            expect(animals[0]).toBe("monkey")
+        })
+
+        it("should have inital length of 4", () => {
+            expect(animals.length).toBe(4)
+        })
+    })
+
+The last test will fail bc it expects 4 but will get 6. This is bc the previous 2 tests added 2 more animals.
+To fix this, for each test can reset the animals array. 
+Ex:
+
+let animals = ['elephant', 'zebra', 'bear', 'tiger']
+
+    describe("animals array", () => {
+        it("should add animal to end of array", () => {
+            animals = ['elephant', 'zebra', 'bear', 'tiger']
+            animals.push("aligator")
+            expect(animals[animals.length - 1]).toBe("aligator")
+        })
+
+        it("should add animal to beginning of array", () => {
+            animals = ['elephant', 'zebra', 'bear', 'tiger']
+            animals.unshift("monkey")
+            expect(animals[0]).toBe("monkey")
+        })
+
+        it("should have inital length of 4", () => {
+            animals = ['elephant', 'zebra', 'bear', 'tiger']
+            expect(animals.length).toBe(4)
+        })
+    })
+
+But doing so is not good practice since it's repeating code. Can do instead:
+
+            let animals = ['elephant', 'zebra', 'bear', 'tiger']
+
+            beforeEach(() => {
+                animals = ['elephant', 'zebra', 'bear', 'tiger']
+            })
+
+            describe("animals array", () => {
+                it("should add animal to end of array", () => {
+                    animals.push("aligator")
+                    expect(animals[animals.length - 1]).toBe("aligator")
+                })
+
+                it("should add animal to beginning of array", () => {        
+                    animals.unshift("monkey")
+                    expect(animals[0]).toBe("monkey")
+                })
+
+                it("should have inital length of 4", () => {      
+                    expect(animals.length).toBe(4)
+                })
+            })
+
+The only() will make sure only that test will run and other tests without only() in the same file will be skipped. Ex:
+
+            beforeEach(() => {
+                console.log("BEFORE EACH")
+                animals = ['elephant', 'zebra', 'bear', 'tiger']
+            })
+
+            describe("animals array", () => {
+                it("should add animal to end of array", () => {
+                    animals.push("aligator")
+                    expect(animals[animals.length - 1]).toBe("aligator")
+                })
+
+                it("should add animal to beginning of array", () => {        
+                    animals.unshift("monkey")
+                    expect(animals[0]).toBe("monkey")
+                })
+
+                it("should have inital length of 4", () => {      
+                    expect(animals.length).toBe(4)
+                })
+            })
+
+            describe("testing something else", () => {
+                test.only("true should be truthy", () => { //only will make sure only this test will run
+                    expect(true).toBeTruthy()
+                })
+            })
+
+In this case, only the test "testing something else" will be ran but the beforeEach() will also be ran. To 
+make the beforeEach() run only for a specific group of tests, can nest it inside the describe block it's meant for
+Ex:
+
+            describe("animals array", () => {
+                beforeEach(() => {
+                    console.log("BEFORE EACH")
+                    animals = ['elephant', 'zebra', 'bear', 'tiger']
+                })
+
+                it("should add animal to end of array", () => {
+                    animals.push("aligator")
+                    expect(animals[animals.length - 1]).toBe("aligator")
+                })
+
+                it("should add animal to beginning of array", () => {        
+                    animals.unshift("monkey")
+                    expect(animals[0]).toBe("monkey")
+                })
+
+                it("should have inital length of 4", () => {      
+                    expect(animals.length).toBe(4)
+                })
+            })
+
+            describe("testing something else", () => {
+                test.only("true should be truthy", () => { //only will make sure only this test will run
+                    expect(true).toBeTruthy()
+                })
+            })
+----------------------------------------------------------
+MOCKS
+04-mocks
+
+Let say we have this simple function:
+
+            const forEach = (items, callback) => {
+                for(let i = 0; i <items.length; i++){
+                    callback(items[i])
+                }
+            }
+
+We will want to mock the callback instead of actually calling a function. To do so, enter:
+
+            it("mock callback", () => {
+                //to mock callback, do jest.fn. This mock function have can logic
+                const mockCallback = jest.fn((x) => 42 + x)
+
+                forEach([0, 1], mockCallback) //trying to mock line 244
+                //each callback has mock property, which has data associated to the mock callback
+                //calls mockCalledback twice since there's only 2 # provided in array and expect toBe 2
+                expect(mockCallback.mock.calls.length).toBe(2)
+                //can specify what we got. calls returns an array. 1st call is index 0, 2nd call is index 1
+                //that's why in above line code, expect toBe is 2 since there's call1 and call2
+                //2nd [0] is meant to be the index of the # array, which is 0, as seen in [0,1]
+                expect(mockCallback.mock.calls[0][0]).toBe(0)
+                //calls[0][0] represents call2 and call2 is passed 1
+                expect(mockCallback.mock.calls[1][0]).toBe(1)
+                expect(mockCallback.mock.results[0].value).toBe(42)
+                expect(mockCallback.mock.results[1].value).toBe(43)
+            })
+
+results[0] is basically calling the logic with the passed param, in this case 0 since it's the first index
+and getting back the value. Then making sure the value is (toBe) 42
+
+Add to the code:
+
+            it("mock return", () => {
+                const mock = jest.fn()
+                mock.mockreturnvalueOnce(true)
+                const results = mock()
+                expect(results).toBe(true)
+            })
+
+Can create a mock function and mock its return value. Can also do this:
+
+            it("mock return", () => {
+                const mock = jest.fn()
+                mock.mockreturnvalueOnce(true).mock.mockreturnvalueOnce(false).mock.mockreturnvalueOnce("hello")
+
+                const results = mock()
+                const results2 = mock()
+                const results3 = mock()
+
+                expect(results).toBe(true)
+                expect(results2).toBe(false)
+                expect(results3).toBe("hello")
+            })
+
+Add following code:
+
+            const axios = require("axios")
+
+            const fetchData = async (id) => {
+                const results = await axios.get(`https://jsonplaceholder.typicode.com/todos/${id}`) 
+                return results.data
+            }
+
+To mock axios, need to spy on it, which is like a mock and return the mock value we want. Add test:
+
+            it("mock axios", async () => {
+                jest.spyOn(axios, "get").mockReturnValueOnce({
+                    data: {
+                        id: 1,
+                        todo: "get milk" 
+                    }
+                })
+                const results = await fetchData(1)
+                expect(results.todo).toBe("get milk")
+            })
+
+Don't actually want to make an https request, so just need to mock axios using line 307. First param is the
+object and 2nd param is method, which is the get method/ request. To prove it's been mocked, can modify code
+here:
+
+const results = await axios.get(`https://jsonplaceholder.typicode.com/todos/${id}`) 
+console.log(results)
+
+And will get back result:
+  console.log
+    { data: { id: 1, todo: 'get milk' } }
